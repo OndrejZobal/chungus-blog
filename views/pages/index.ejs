@@ -28,14 +28,15 @@
 
     <main>
         <% articles.forEach(function(article) {%>
+        <a href="<%= article.urlidArticle %>">
         <div>
-            <h2><%= article.title %></h2>
-            <p><i><%= article.author %></i></p>
-            <p><%= article.content %></p>
+            <h2><%= article.titleArticle %></h2>
+            <p><i><%= article.publicatoinDateArticle %></i></p>
+            <p><%= article.abstractArticle %></p>
             <hr>
         </div>
+        </a>
         <% }); articles %>
-        <p><%= "dudes" %></p>
     </main>
 
     <hr>

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /// Buildins
+const util = require('util')
 const path = require('path')
 const fs = require('fs')
 
@@ -13,35 +14,34 @@ let config_path = './config.json'
 /// Constants
 let sql_login_path = './sql_login.json.credentials'
 
-/// FIXME debug constants
-var articles = [
-  {
-   title: "Hello wordl",
-   author: "Ondřej Zobal",
-   content: "Sugonthose nuts",
-  },
-
-  {
-   title: "There is ",
-   author: "Ondřej Zobal",
-   content: "A house in new orlins they call the rising sun",
-  },
-
-
-  {
-   title: "Bool je kok",
-   author: "Alfons Mucha",
-   content: "Smradlaví hoven je král všech muc",
-  },
-
-  {
-   title: "Kajaki na nás válčí",
-   author: "Frajer frajerský",
-   content: "A to se kde jako vzalo takováto informace.",
-  },
-
-]
-
+///// FIXME debug constants
+//var articles = [
+//  {
+//   title: "Hello wordl",
+//   author: "Ondřej Zobal",
+//   content: "Sugonthose nuts",
+//  },
+//
+//  {
+//   title: "There is ",
+//   author: "Ondřej Zobal",
+//   content: "A house in new orlins they call the rising sun",
+//  },
+//
+//
+//  {
+//   title: "Bool je kok",
+//   author: "Alfons Mucha",
+//   content: "Smradlaví hoven je král všech muc",
+//  },
+//
+//  {
+//   title: "Kajaki na nás válčí",
+//   author: "Frajer frajerský",
+//   content: "A to se kde jako vzalo takováto informace.",
+//  },
+//
+//]
 
 /// Loading Configuration
 let config = fs.readFileSync(config_path)
@@ -51,29 +51,35 @@ config = JSON.parse(config)
 let sql_login = fs.readFileSync(sql_login_path)
 sql_login = JSON.parse(sql_login)
 
+/// Public website
+const app = express()
 // Test query
 const sql_con =  mysql.createConnection(sql_login)
 sql_con.connect((err) => {
   if (err) throw err
   else {
     console.log("connected")
-    sql_con.query("SELECT * FROM Author WHERE nameAuthor LIKE \"Ondřej\"", (err, result, fields) => {
-      if (err) throw err
-      console.log(result)
-      //console.log(fields)
-    })
   }
 })
 
 
-/// Public web
-const app = express()
 // Starting the webserver
 app.set('view engine', 'ejs')
 
-app.get('/', (req, res) => {
-  res.render('./pages/index.ejs', {articles: articles})
+app.get('/', async (req, res) => {
+  let art = sql_con.query("SELECT * FROM Article", (err, result, asdf) => {
+    if (err) {
+      res.status(500)
+      res.send(":( Database Brokeeee")
+    }
+    else {
+      res.render('./pages/index.ejs', {articles: result})
+    }
+  })
 })
+
+
+
 
 // app.get('/', (req, res) => {
 //   res.sendFile(path.resolve(__dirname, './index.html'))
