@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `blog_db`.`Article` (
   `idArticle` INT NOT NULL AUTO_INCREMENT,
   `urlidArticle` VARCHAR(20) NOT NULL,
   `abstractArticle` VARCHAR(200) NULL,
-  `publicatoinDateArticle` DATE NOT NULL,
+  `publicationDateArticle` DATE NOT NULL,
   `editDateArticle` DATE NULL,
   `pathToArticle` VARCHAR(50) NOT NULL,
   `hiddenTagsArticle` VARCHAR(100) NULL,

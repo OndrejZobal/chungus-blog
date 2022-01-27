@@ -13,3 +13,4 @@ yarn-error.log*
 .eslintcache
 
 *.credentials
+articles/

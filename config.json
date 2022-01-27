@@ -1,3 +1,4 @@
 {
-  "article_directory": "/srv/blog/articles"
+  "articleDirectory": "/srv/blog/articles",
+  "pathTo404": "./404.html"
 }
