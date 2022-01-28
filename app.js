@@ -43,7 +43,6 @@ makeSqlConnection(sql_con).then((con) => {
   sql_con = con
 })
 
-
 app.use(express.static('./public'))
 
 // Starting the webserver
@@ -83,9 +82,8 @@ app.get('/:article', async (req, res) => {
 app.get('/', async (req, res) => {
   let result = (await sql_con.query(dbop.articles()))[0]
   // Doing your mom
-  await child_processes.exec('./utilities/sex', {ecoding: 'utf8'}, (err, stdout, stderr) => {
-    res.render('./pages/index.ejs', {articles: result, sex: stdout})
-  })
+  let sex = await fs.readFile('./quote.txt')
+  res.render('./pages/index.ejs', {articles: result, sex: sex})
 })
 
 // app.get('/', (req, res) => {
