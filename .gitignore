@@ -14,3 +14,4 @@ yarn-error.log*
 
 *.credentials
 articles/
+quote.txt
