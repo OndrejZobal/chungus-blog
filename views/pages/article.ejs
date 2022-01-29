@@ -4,36 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <style>
-    body {
-	    background-color: blue;
-	    text-align: center;
-	    color: white;
-    }
-    h1 {
-	    color:red;}
-
-    </style>
 
     <title>Mrcrsoft A ntivirun</title>
 </head>
 <body>
+    <div class="article-header">
 	<h1><%= article.titleArticle %></h1>
-	<p><%= article.publicationDateArticle %></p>
+    <span style="font-family: LibreBaskerville-Italic; float: right; text-align: right">publikováno dne <%=
+        article.publicationDateArticle.getDate().toString() +". "+
+        (article.publicationDateArticle.getMonth()+1).toString() +". "+
+         article.publicationDateArticle.getFullYear().toString() %>
+    </span>
     <% if (authors.length > 0) { %>
-	<p>Written by: <% authors.forEach((author) => { %>
+	<p>Autoři: <% authors.forEach((author) => { %>
         <i><%= author.nameAuthor %></i>
         <b><%= author.surnameAuthor %></b>
         <% }) %>
     </p>
     <% } %>
-	<h2><%= article.abstractArticle %></h2>
-	<br>
+	<p class="quote"><%= article.abstractArticle %></p>
+    </div>
+	<hr style="border-top: 2px solid #3c6c83; border-bottom: none;">
 	 <%- content %>
-	<p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
-
-    <hr>
-	<h3>8-O0-81-35</h3>
 </body>
 
 </html>

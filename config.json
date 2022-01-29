@@ -1,4 +1,5 @@
 {
   "articleDirectory": "/srv/blog/articles",
-  "pathTo404": "./404.html"
+  "pathTo404": "./views/pages/404.ejs",
+  "webTitle": "Velký Čangas"
 }

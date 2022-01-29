@@ -1,0 +1,43 @@
+
+<article>
+    <h2>Vstoupit smí každý. S odchodem už to ale tak jednoduché nebude...</h2>
+    <p>
+        Stanuli jste na prahu podivného, pofiderního a zhola nezajímavého a většinu času neaktivního osobního blogu.
+        Budu moc rád, když se chvíli zdržíte a pročtete si nějaké články,
+        nebo se alespoň pokocháte gramatickýmy chybamy, kterýmy nerad šetřím.
+    </p>
+    <img src="/img/bongo.gif">
+    <br>
+    <h3>Dnešní citát:</h3>
+    <p class="quote"><%= sex %></p>
+</article>
+<h3>Nejnovější články:</h3>
+<% articles.forEach(function(article) {%>
+<a href="<%= article.urlidArticle %>">
+    <div class="article-preview">
+        <h3><%= article.titleArticle %></h3>
+        <p style="font-family: LibreBaskerville-Italic">publikováno dne <%=
+            article.publicationDateArticle.getDate().toString() +". "+
+            (article.publicationDateArticle.getMonth()+1).toString() +". "+
+            article.publicationDateArticle.getFullYear().toString() %></p>
+        <p><%= article.abstractArticle %></p>
+    </div>
+</a>
+<% }); articles %>
+<div>
+    <h4>Filler:</h4>
+    <h5>Fillera:</h5>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+    <p>To disarm the malwar ples call the nummber of you're screen desplay bleow. Do not hestate. Your computer will be destroied otherwiese. And you hard drives broke and you're house burn down two!!!</p>
+</div>
