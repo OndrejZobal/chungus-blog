@@ -1,0 +1,14 @@
+[Unit]
+Description=An epic website
+After=network-online.target
+
+[Service]
+User=ondrej
+WorkingDirectory=/opt/chungus-blog/
+ExecStart=/opt/chungus-blog/app.js
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
+
