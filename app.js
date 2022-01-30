@@ -9,13 +9,12 @@ const child_processes = require('child_process')
 const exec = util.promisify(child_processes.exec)
 
 /// Installed
-const mysql = require('mysql2/promise')
 const express = require('express')
 const ejs = require('ejs')
 
 /// Local
-const dbop = require('./dbOperations')
-const tools = require('./tools')
+const dbop = require('./src/dbOperations')
+const tools = require('./src/tools')
 const {fprint} = tools
 
 /// Configuration
@@ -35,12 +34,8 @@ sqlLogin = JSON.parse(sqlLogin)
 /// Public website
 const app = express()
 
-/// Connecting with the mySQL database
-const makeSqlConnection = async (sql_con) => {
-  return sql_con = await mysql.createConnection(sqlLogin)
-}
 let sql_con = null
-makeSqlConnection(sql_con).then((con) => {
+dbop.makeSqlConnection(sqlLogin).then((con) => {
   sql_con = con
 })
 
@@ -80,6 +75,12 @@ app.get('/admin', async (req, res) => {
   await renderInTemplate(res, content, "Caught in 4K", 0, "/img/creepy_trollface.gif")
 })
 
+// A funny little easter egg to troll shitty script kiddies
+app.get('/secretadmin', async (req, res) => {
+  let content = await ejs.renderFile('./views/pages/admin.ejs')
+  await renderInTemplate(res, content, "Admin Panel", 0, "/img/flushed_round.gif")
+})
+
 app.get('/articles', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/articles.ejs')
   await renderInTemplate(res, content, "Články", 2)
@@ -92,13 +93,14 @@ app.get('/guestbook', async (req, res) => {
 
 app.get('/about', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/about.ejs')
+  // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
   await renderInTemplate(res, content, "O Čangasovi", 4)
 })
 
 app.get('/:article', async (req, res) => {
   const serve = async (res, article) => {
     if(article.length > 0){
-      let authors = (await sql_con.query(dbop.articleAuthors(article[0].idArticle)))[0]
+      let authors = (await dbop.articleAuthors(sql_con, article[0].idArticle))[0]
       // Get the actual article file :)
       let content = await fs.readFile(`./articles/${article[0].pathToArticle}/article.html`)
 
@@ -113,15 +115,15 @@ app.get('/:article', async (req, res) => {
     }
   }
 
-  // Find article by id nymber
+  // Find article by id number
   if (!isNaN(req.params.article)){
-    if (await serve(res, (await sql_con.query(dbop.articleId(req.params.article)))[0])) {
+    if (await serve(res, (await dbop.articleId(sql_con, req.params.article))[0])) {
       return
     }
   }
 
   // Querry for article using urlid
-  if (await serve(res, (await sql_con.query(dbop.articleUrlid(req.params.article)))[0])) {
+  if (await serve(res, (await dbop.articleUrlid(sql_con, req.params.article))[0])) {
     return
   }
 
@@ -130,7 +132,7 @@ app.get('/:article', async (req, res) => {
 })
 
 app.get('/', async (req, res) => {
-  let result = (await sql_con.query(dbop.articles()))[0]
+  let result = (await dbop.articles(sql_con))[0]
   // Doing your mom
   let sex = await fs.readFile('./quote.txt')
   let content = await ejs.renderFile('./views/pages/home.ejs', {articles: result, sex: sex})

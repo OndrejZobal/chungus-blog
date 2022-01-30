@@ -1,5 +1,9 @@
 {
-  "articleDirectory": "/srv/blog/articles",
+  "articleDirectory": "./articles/",
+  "articleResourceSubdir": "res/",
+  "articleContentFileNameMd": "article.md",
+  "articleContentFileNameHtml": "article.html",
+  "articleCreationTemplate": "./views/article_creation_template.html",
   "pathTo404": "./views/pages/404.ejs",
   "webTitle": "Velký Čangas"
 }
