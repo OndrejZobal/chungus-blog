@@ -1,0 +1,13 @@
+<h3>Články</h3>
+<% articles.forEach(function(article) {%>
+<a href="/secretadmin/compose/<%= article.urlidArticle %>">
+    <div class="article-preview">
+        <h3><%= article.titleArticle %></h3>
+        <p style="font-family: LibreBaskerville-Italic">publikováno dne <%=
+            article.publicationDateArticle.getDate().toString() +". "+
+            (article.publicationDateArticle.getMonth()+1).toString() +". "+
+            article.publicationDateArticle.getFullYear().toString() %></p>
+        <p><%= article.abstractArticle %></p>
+    </div>
+</a>
+<% }); articles %>

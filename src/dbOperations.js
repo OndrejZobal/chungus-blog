@@ -18,14 +18,24 @@ const makeSqlConnection = async (sqlLogin) => {
 }
 exports.makeSqlConnection = makeSqlConnection;
 
+// TODO ADD no limit option for the two following functions.
 const articles = async (con, searchTerm="%", limit=10) => {
   // Escepting the search term, but preserving the % wildcard
   if (searchTerm == "%"){
     return await con.query('SELECT * FROM Article WHERE titleArticle LIKE "%" AND isWorkInProgress=FALSE AND isPublic=TRUE ORDER BY publicationDateArticle DESC LIMIT ?;', [limit])
   }
-  return await con.query('SELECT * FROM Article WHERE titleArticle LIKE ? ORDER BY publicationDateArticle DESC LIMIT ?;', [searchTerm, limit])
+  return await con.query('SELECT * FROM Article WHERE titleArticle LIKE ? AND isWorkInProgress=FALSE AND isPublic=TRUE ORDER BY publicationDateArticle DESC LIMIT ?;', [searchTerm, limit])
 }
 exports.articles = articles
+
+const allArticles = async (con, searchTerm="%", limit=10) => {
+  // Escepting the search term, but preserving the % wildcard
+  if (searchTerm == "%"){
+    return await con.query('SELECT * FROM Article WHERE titleArticle LIKE "%" ORDER BY publicationDateArticle DESC LIMIT ?;', [limit])
+  }
+  return await con.query('SELECT * FROM Article WHERE titleArticle LIKE ? ORDER BY publicationDateArticle DESC LIMIT ?;', [searchTerm, limit])
+}
+exports.allArticles = allArticles
 
 const articleUrlid = async (con, urlid) => {
   let result = await con.query('SELECT * FROM Article WHERE urlidArticle LIKE ? AND isWorkInProgress=FALSE AND isPublic=TRUE LIMIT 1;', [urlid])
@@ -33,10 +43,21 @@ const articleUrlid = async (con, urlid) => {
 }
 exports.articleUrlid = articleUrlid
 
+const allArticleUrlid = async (con, urlid) => {
+  let result = await con.query('SELECT * FROM Article WHERE urlidArticle LIKE ? LIMIT 1;', [urlid])
+  return result
+}
+exports.allArticleUrlid = allArticleUrlid
+
 const articleId = async (con, id) => {
   return await con.query("SELECT * FROM Article WHERE idArticle = ? AND isWorkInProgress=FALSE AND isPublic=TRUE LIMIT 1;", [id])
 }
 exports.articleId = articleId
+
+const allArticleId = async (con, id) => {
+  return await con.query("SELECT * FROM Article WHERE idArticle = ? LIMIT 1;", [id])
+}
+exports.allArticleId = allArticleId
 
 const articleAuthors = async (con, id) => {
   return await con.query(`SELECT Author.idAuthor, Author.nameAuthor, Author.surnameAuthor,
@@ -116,124 +137,134 @@ const setArticleWip = async (con, id, state) => {
 }
 
 const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, publicationDate, abstract, mdContent, resources) => {
-  // 1. Article is created in the database. Work in progress is set to true,
-  // so the article is not visible
+  try{
+    // 1. Article is created in the database. Work in progress is set to true,
+    // so the article is not visible
 
-  const errorHandle = async (err, db, dir) => {
-    console.log(err)
+    const errorHandle = async (err, db, dir) => {
+      console.log(err)
+      try {
+        if (dir){
+          if (fs.existsSync(dir)){
+            fs.rmSync(dir, { recursive:  true, force: true })
+          }
+        }
+      }
+      catch (err) {
+        console.log("Error while reverting changes from unsuccesfull attenpt at adding article.")
+        console.log(err)
+      }
+
+      await db.rollback()
+      await db.end()
+      return false;
+    }
+
+    // Making a brand new db connection to do transactions on.
+
+    let db = null
     try {
-      if (dir){
-        if (fs.existsSync(dir)){
-          fs.rmSync(dir, { recursive:  true, force: true })
+      db = await makeSqlConnection(sqlLogin)
+    }
+    catch (err) {
+      console.log(err)
+      return
+    }
+
+    await db.beginTransaction()
+
+    // Creating article entry in the database
+    let result = await createWIPArticle(db, title, abstract,
+                                        publicationDate)
+    let articleId = null
+    try{
+      articleId = result.response[0].insertId
+    }
+    catch {
+      await errorHandle("The database refused to add this article, TIP: Check if ids are unique.", db)
+    }
+
+    // Assigning Authors
+    try {
+      for (const author of authorIds) {
+        console.log(articleId)
+        console.log(author)
+        if (!await createArticleHasAuthor(db, articleId, author)){
+          await errorHandle("Cannot add Authors to database", db)
         }
       }
     }
     catch (err) {
-      console.log("Error while reverting changes from unsuccesfull attenpt at adding article.")
-      console.log(err)
+      await errorHandle(err, db)
     }
 
-    await db.rollback()
-    await db.end()
-    return false;
-  }
-
-  // Making a brand new db connection to do transactions on.
-
-  let db = null
-  try {
-    db = await makeSqlConnection(sqlLogin)
-  }
-  catch (err) {
-    console.log(err)
-    return
-  }
-
-  await db.beginTransaction()
-
-  // Creating article entry in the database
-  let result = await createWIPArticle(db, title, abstract,
-                                      publicationDate)
-  if (!result.response){
-    await errorHandle("The database refused to add this article, TIP: Check if ids are unique.", db)
-  }
-  let articleId = result.response[0].insertId
-
-  // Assigning Authors
-  try {
-    for (const author of authorIds) {
-      console.log(articleId)
-      if (!await createArticleHasAuthor(db, articleId, author)){
-        await errorHandle("Cannot add Authors to database", db)
+    // Assigning Tags
+    try {
+      for (const tag of tagIds) {
+        await createArticleHasTag(db, articleId, tag)
       }
     }
-  }
-  catch (err) {
-    await errorHandle(err, db)
-  }
-
-  // Assigning Tags
-  try {
-    for (const tag of tagIds) {
-      await createArticleHasTag(db, articleId, tag)
+    catch (err) {
+      await errorHandle(err, db)
     }
-  }
-  catch (err) {
-    await errorHandle(err, db)
-  }
 
-  // 2. If the db entry was created sucessfully a directory for the article will be
-  // created. And the Markdown file will be moved inside. Along with other resources
+    // 2. If the db entry was created sucessfully a directory for the article will be
+    // created. And the Markdown file will be moved inside. Along with other resources
 
-  console.log(config.articleDirectory)
-  console.log(result.path)
-  let pathToArticle = path.join(config.articleDirectory, result.path)
-  let resPath = path.join(pathToArticle, config.articleResourceSubdir)
-  try {
-    // I. Make directory for the article
-    if (fs.existsSync(pathToArticle)){
-      await errorHandle(`Article directory "${result.path}" already exists!`, db)
+    console.log(config.articleDirectory)
+    console.log(result.path)
+    let pathToArticle = path.join(config.articleDirectory, result.path)
+    let resPath = path.join(pathToArticle, config.articleResourceSubdir)
+    try {
+      // I. Make directory for the article
+      if (fs.existsSync(pathToArticle)){
+        await errorHandle(`Article directory "${result.path}" already exists!`, db)
+      }
+      fs.mkdirSync(pathToArticle)
+      fs.mkdirSync(resPath)
+
+      // II. Move md source to the article directory
+
+      await fs.promises.writeFile(path.join(pathToArticle, config.articleContentFileNameMd),
+                        mdContent)
     }
-    fs.mkdirSync(pathToArticle)
-    fs.mkdirSync(resPath)
+    catch (err) {
+      await errorHandle(err, db, pathToArticle)
+    }
+    // III. TODO Make subdirectory for resources and move resources for the article there.
 
-    // II. Move md source to the article directory
+    // 3. Pandoc will convert the md file into an html file, that will be saved in
+    // the articles directory along with other resources.
 
-    await fs.promises.writeFile(path.join(pathToArticle, config.articleContentFileNameMd),
-                      mdContent)
+    // I. Run pandoc targeting the md file and save the aoutput in the article direcoty
+    let htmlPath = path.join(pathToArticle, config.articleContentFileNameHtml)
+    let mdPath = path.join(pathToArticle, config.articleContentFileNameMd)
+    console.log(htmlPath)
+    try {
+      console.log("What the shit")
+      await exec(`pandoc --standalone --template ${config.articleCreationTemplate} -o ${htmlPath} < ${mdPath} ;`)
+    }
+    catch (err) {
+      await errorHandle(err, db, pathToArticle)
+    }
+
+    // 4. If everything went ok the articles entry in the database will be altered
+    // to work in progress off. The article should then be publicly available
+    // on the website.
+
+    if (!await setArticleWip(db, articleId, 0)){
+      await errorHandle("Article WIP state could not be changed", db, pathToArticle)
+    }
+
+    // Finalize changes to the db
+    await db.commit()
+    await db.end()
+    console.log(`ARTICLE ${result.path} ADDED SUCCESSFULL`)
+    return true
   }
-  catch (err) {
-    await errorHandle(err, db, pathToArticle)
+  catch {
+    return false
   }
-  // III. TODO Make subdirectory for resources and move resources for the article there.
-
-  // 3. Pandoc will convert the md file into an html file, that will be saved in
-  // the articles directory along with other resources.
-
-  // I. Run pandoc targeting the md file and save the aoutput in the article direcoty
-  let htmlPath = path.join(pathToArticle, config.articleContentFileNameHtml)
-  let mdPath = path.join(pathToArticle, config.articleContentFileNameMd)
-  console.log(htmlPath)
-  try {
-    console.log("What the shit")
-    await exec(`pandoc --standalone --template ${config.articleCreationTemplate} -o ${htmlPath} < ${mdPath} ;`)
-  }
-  catch (err) {
-    await errorHandle(err, db, pathToArticle)
-  }
-
-  // 4. If everything went ok the articles entry in the database will be altered
-  // to work in progress off. The article should then be publicly available
-  // on the website.
-
-  if (!await setArticleWip(db, articleId, 0)){
-    await errorHandle("Article WIP state could not be changed", db, pathToArticle)
-  }
-
-  // Finalize changes to the db
-  await db.commit()
-  await db.end()
-  console.log(`ARTICLE ${result.path} ADDED SUCCESSFULL`)
 }
 
 exports.publishNewArticle = publishNewArticle

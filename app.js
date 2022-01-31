@@ -11,6 +11,7 @@ const exec = util.promisify(child_processes.exec)
 /// Installed
 const express = require('express')
 const ejs = require('ejs')
+const bodyParser = require('body-parser')
 
 /// Local
 const dbop = require('./src/dbOperations')
@@ -65,6 +66,8 @@ const sendNotFound = async (res, path) => {
 }
 
 app.use(express.static('./public'))
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
 
 // Starting the webserver
 app.set('view engine', 'ejs')
@@ -81,6 +84,58 @@ app.get('/secretadmin', async (req, res) => {
   await renderInTemplate(res, content, "Admin Panel", 0, "/img/flushed_round.gif")
 })
 
+app.get('/secretadmin/compose', async (req, res) => {
+  let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
+    title: "",
+    abstract: "",
+    article: "",
+    status: ""
+  })
+  await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
+})
+
+app.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
+  date = new Date(Date.now())
+  stringDate = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
+  let result = await dbop.publishNewArticle(sqlLogin, config, req.body.title, [1], [], stringDate, req.body.abstract, req.body.article, [])
+
+  console.log({
+      title: req.body.title,
+      abstract: req.body.abstract,
+      article: req.body.article,
+      status: result
+  })
+  if (result){
+    let content = await ejs.renderFile('./views/pages/admin.ejs')
+    await renderInTemplate(res, result, "Publishing artilce", 0, "/img/flushed_round.gif")
+  }
+  else {
+    let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
+      title: req.body.title,
+      abstract: req.body.abstract,
+      article: req.body.article,
+      status: result
+    })
+    await renderInTemplate(res, content, "Error", 0, "/img/flushed_round.gif")
+  }
+})
+
+app.get('/secretadmin/compose/:article', async (req, res) => {
+  let article = (await dbop.allArticleUrlid(sql_con, req.params.article))[0]
+  let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
+    title: article.titleArticle,
+    abstract: article.abstractArticle,
+    article: article,
+  })
+  await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
+})
+
+app.get('/secretadmin/articles', async (req, res) => {
+  let articles = (await dbop.allArticles(sql_con, "%", 1000))[0]
+  let content = await ejs.renderFile('./views/pages/admin_articles.ejs', { articles: articles })
+  await renderInTemplate(res, content, "All articles", 0, "/img/flushed_round.gif")
+})
+
 app.get('/articles', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/articles.ejs')
   await renderInTemplate(res, content, "Články", 2)
@@ -95,6 +150,34 @@ app.get('/about', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/about.ejs')
   // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
   await renderInTemplate(res, content, "O Čangasovi", 4)
+})
+
+app.get('/atom', async (req, res) => {
+  let articles = (await dbop.articles(sql_con, "%", 25))[0]
+  if (articles === undefined){
+    res.send('error')
+  }
+  try {
+    if (articles.length < 1) {
+      res.send('error')
+    }
+  }
+  catch {
+    res.send('error')
+  }
+
+  res.setHeader('content-type', 'application/atom+xml')
+  let lastEdit = articles[0].editDateArticle === null ? articles[0].publicationDateArticle : articles[0].editDateArticle
+  console.log(lastEdit)
+  latstEdit = `${lastEdit.getFullYear()}-${lastEdit.getMonth()+1}-${lastEdit.getDate()}`
+  await res.render('./pages/atom.ejs', {
+    webTitle: config.webTitle,
+    baseUrl: config.baseUrl,
+    ownerName: config.ownerName,
+    ownerEmail: config.ownerEmail,
+    lastUpdate: lastEdit,
+    articles: articles
+  })
 })
 
 app.get('/:article', async (req, res) => {

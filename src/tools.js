@@ -18,3 +18,13 @@ const convertToAscii = (string) => {
   return string
 }
 exports.converToAscii = convertToAscii
+
+const bodyCrlfToLf = (req, res, next) => {
+  for (const obj in req.body){
+    if(typeof(req.body[obj]) === "string"){
+      req.body[obj] = req.body[obj].replace(/\r\n/g, "\n")
+    }
+  }
+  next()
+}
+exports.bodyCrlfToLf = bodyCrlfToLf

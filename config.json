@@ -5,5 +5,8 @@
   "articleContentFileNameHtml": "article.html",
   "articleCreationTemplate": "./views/article_creation_template.html",
   "pathTo404": "./views/pages/404.ejs",
-  "webTitle": "Velký Čangas"
+  "webTitle": "Velký Čangas",
+  "baseUrl": "https://bigchungus.cz/",
+  "ownerName": "Ondřej Zobal",
+  "ownerEmail": "ondrej@ondrejzobal.xyz"
 }

@@ -1,0 +1,9 @@
+<h2>Compose a new article</h2>
+<form action="/secretadmin/compose" method="post">
+    <h3>Title: </h3><input name="title" type="text" width="100" value="<%= title %>"><br>
+    <h3>Abstract:</h3> <textarea name="abstract" type="text" rows="4" cols="40" ><%= abstract %></textarea><br>
+    <h3>Article: </h3><textarea name="article" type="text" rows="4" cols="70" ><%= abstract %></textarea><br>
+    <br>
+    <input type="submit" value="Publikovat">
+    <p><%= status %></p>
+</form>

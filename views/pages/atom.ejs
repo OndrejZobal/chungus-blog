@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><%= webTitle %></title>
+  <link href="<%= baseUrl %>"/>
+  <updated><%= lastUpdate %></updated>
+  <author>
+    <name><%= ownerName %></name>
+    <email><%= ownerEmail %></email>
+    <uri><%= baseUrl %></uri>
+  </author>
+  <id><%= baseUrl %></id>
+
+  <% for (const article of articles) { %>
+  <entry>
+    <title><%= article.titleArticle %></title>
+    <link href="<%= baseUrl + article.urlidArticle %>"/>
+    <id><%= baseUrl + article.urlidArticle %></id>
+    <%
+    let date = (article.editDateArticle === null ? article.publicationDateArticle : article.editDateArticle)
+    %>
+    <updated><%= `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}` %></updated>
+    <summary><%= article.abstractArticle %></summary>
+  </entry>
+  <% } %>
+
+</feed>
