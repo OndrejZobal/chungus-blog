@@ -28,6 +28,11 @@
     src: url('/fonts/DancingScript.ttf')
 }
 
+@font-face {
+    font-family: SpaceMono;
+    src: url('/fonts/SpaceMono.ttf')
+}
+
 body {
     background-image: url(/img/wnoise.gif);
     text-align: center;
@@ -147,34 +152,50 @@ img {
 
 nav {
     grid-area: nav;
-    background-color: #04050d;
-    padding: 2em;
-    min-height: 600px;
-    margin-bottom: 30px;
-    max-height: 85vh;
-    max-width: 250px;
     overflow: hidden;
-    //box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-    box-shadow: rgba(22, 151, 200, 0.4) -5px 5px, rgba(22, 151, 200, 0.3) -10px 10px, rgba(22, 151, 200, 0.2) -15px 15px, rgba(22, 151, 200, 0.1) -20px 20px, rgba(22, 151, 200, 0.05) -25px 25px, rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
     border-radius: 3px;
+
+    padding-top: 3vh;
+    padding-bottom: 3vh;
+    padding-left: 1.5vw;
+    padding-right: 1.5vw;
+
+    max-height: 85vh;
+    max-width: 15vw;
+
+    background-color: #04050d;
+    box-shadow: rgba(22, 151, 200, 0.4) -5px 5px, rgba(22, 151, 200, 0.3) -10px 10px, rgba(22, 151, 200, 0.2) -15px 15px, rgba(22, 151, 200, 0.1) -20px 20px, rgba(22, 151, 200, 0.05) -25px 25px, rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 }
 
 main {
-    min-height: 600px;
-    //margin-bottom: 30px;
     grid-area: main;
-    background-color: #04050d;
+    overflow: auto;
+    border-radius: 3px;
+
     padding-top: 1em;
     padding-bottom: 1em;
     padding-left: 4em;
     padding-right: 4em;
-    overflow: auto;
-    max-width: 1000px;
+
+    min-height: 600px;
     max-height: 85vh;
-    //box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    max-width: 42vw;
+
+    background-color: #04050d;
     box-shadow: rgba(22, 151, 200, 0.4) -5px 5px, rgba(22, 151, 200, 0.3) -10px 10px, rgba(22, 151, 200, 0.2) -15px 15px, rgba(22, 151, 200, 0.1) -20px 20px, rgba(22, 151, 200, 0.05) -25px 25px, rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-    margin-bottom: 30px;
-    border-radius: 3px;
+}
+
+.gridcontainer {
+  display: grid;
+  grid-template-areas:
+    'nav main main main'
+    'nav main main main';
+  grid-gap: 2vw;
+
+  padding-left: 17vw;
+  padding-right: 17vw;
+  padding-top: 5vh;
+  padding-bottom: 5vh;
 }
 
 .article-header {
@@ -230,19 +251,6 @@ main {
     margin: 0px;
 }
 
-.gridcontainer {
-  display: grid;
-  grid-template-areas:
-    'nav main main main'
-    'nav main main main';
-  grid-gap: 30px;
-  padding-left: 16vw;
-  padding-right: 16vw;
-  padding-top: 5vh;
-  //max-width: 1280px;
-  //padding-bottom: 5vh;
-}
-
 .nav-footer {
     display: inline-block;
     align-self: flex-end;
@@ -294,28 +302,39 @@ main {
 
 @media (max-width: 1350px){
    nav {
-       max-height: 80vh;
+       //min-width: 250px;
+       min-width: 25vw;
    }
    main {
-       min-width: 5vw;
-       max-height: 80vh;
+       //min-width: 450px;
+       min-width: 50vw;
    }
    .gridcontainer {
-       padding-left: 15px;
-       padding-right: 15px;
+       padding-left: 5vw;
+       padding-right: 5vw;
+       gap: 3vw;
    }
 }
 
 @media (max-width: 900px){
     nav {
-        max-width: none;
+        max-width: 93vw;
         min-width: none;
         max-height: none;
         padding: 1vw;
     }
+    nav > h1 {
+        font-size: 2em
+    }
+    nav > #logo {
+        width: 20%;
+    }
     main {
         overflow: visible;
+        max-width: 89vw;
+        min-width: none;
         max-height: none;
+        padding: 5vw;
         //padding: 1vw;
         //min-height: auto;
     }
@@ -323,9 +342,10 @@ main {
         grid-template-areas:
             'nav nav nav nav'
             'main main main main';
-        padding-left: 10px;
-        padding-right:10px;
-        padding-top: 5px;
+        padding-left: 3vw;
+        padding-right: 3vw;
+        padding-top: 1vh;
+        min-width: none;
     }
 }
 
@@ -344,7 +364,7 @@ blockquote {
     color: #606060;
 }
 code {
-    font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+    font-family: SpaceMono, monospace;
     font-size: 85%;
     margin: 0;
     text-align: left;
