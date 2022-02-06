@@ -160,8 +160,9 @@ nav {
     padding-left: 1.5vw;
     padding-right: 1.5vw;
 
-    max-height: 85vh;
-    max-width: 15vw;
+    min-height: 700px;
+    height: 83vh;
+    width: 15vw;
 
     background-color: #04050d;
     box-shadow: rgba(22, 151, 200, 0.4) -5px 5px, rgba(22, 151, 200, 0.3) -10px 10px, rgba(22, 151, 200, 0.2) -15px 15px, rgba(22, 151, 200, 0.1) -20px 20px, rgba(22, 151, 200, 0.05) -25px 25px, rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
@@ -172,14 +173,14 @@ main {
     overflow: auto;
     border-radius: 3px;
 
-    padding-top: 1em;
-    padding-bottom: 1em;
+    padding-top: 1vh;
+    padding-bottom: 1vh;
     padding-left: 4em;
     padding-right: 4em;
 
-    min-height: 600px;
-    max-height: 85vh;
-    max-width: 42vw;
+    min-height: 700px;
+    height: 87vh;
+    width: 40vw;
 
     background-color: #04050d;
     box-shadow: rgba(22, 151, 200, 0.4) -5px 5px, rgba(22, 151, 200, 0.3) -10px 10px, rgba(22, 151, 200, 0.2) -15px 15px, rgba(22, 151, 200, 0.1) -20px 20px, rgba(22, 151, 200, 0.05) -25px 25px, rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
@@ -294,6 +295,12 @@ main {
 
 
 @media (min-width: 2000px){
+    nav {
+        width: 10vw;
+    }
+    main {
+        width: 30vw;
+    }
     .gridcontainer {
         padding-left: 25vw;
         padding-right: 25vw;
@@ -318,9 +325,10 @@ main {
 
 @media (max-width: 900px){
     nav {
-        max-width: 93vw;
-        min-width: none;
-        max-height: none;
+        max-width: 100%;
+        //min-width: none;
+        max-height: 1vh;
+        height: 1vh;
         padding: 1vw;
     }
     nav > h1 {
@@ -331,8 +339,9 @@ main {
     }
     main {
         overflow: visible;
-        max-width: 89vw;
+        width: 66vw;
         min-width: none;
+        height: none;
         max-height: none;
         padding: 5vw;
         //padding: 1vw;

@@ -34,6 +34,7 @@ sqlLogin = JSON.parse(sqlLogin)
 
 /// Public website
 const app = express()
+const admin = express()
 
 let sql_con = null
 dbop.makeSqlConnection(sqlLogin).then((con) => {
@@ -72,6 +73,13 @@ app.use(express.urlencoded({extended: true}))
 // Starting the webserver
 app.set('view engine', 'ejs')
 
+// Starting the webserver
+admin.set('view engine', 'ejs')
+admin.use(express.static('./public'))
+admin.use(express.json())
+admin.use(express.urlencoded({extended: true}))
+admin.set('view engine', 'ejs')
+
 // A funny little easter egg to troll shitty script kiddies
 app.get('/admin', async (req, res) => {
   let content = await fs.readFile('./views/pages/epic_hacker.html')
@@ -79,22 +87,23 @@ app.get('/admin', async (req, res) => {
 })
 
 // A funny little easter egg to troll shitty script kiddies
-app.get('/secretadmin', async (req, res) => {
+admin.get('/secretadmin', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/admin.ejs')
   await renderInTemplate(res, content, "Admin Panel", 0, "/img/flushed_round.gif")
 })
 
-app.get('/secretadmin/compose', async (req, res) => {
+admin.get('/secretadmin/compose', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
     title: "",
     abstract: "",
     article: "",
-    status: ""
+    status: "",
+    action: req.path,
   })
   await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
 })
 
-app.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
+admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
   date = new Date(Date.now())
   stringDate = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
   let result = await dbop.publishNewArticle(sqlLogin, config, req.body.title, [1], [], stringDate, req.body.abstract, req.body.article, [])
@@ -114,23 +123,47 @@ app.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
       title: req.body.title,
       abstract: req.body.abstract,
       article: req.body.article,
-      status: result
+      status: result,
+      action: req.path,
     })
     await renderInTemplate(res, content, "Error", 0, "/img/flushed_round.gif")
   }
 })
 
-app.get('/secretadmin/compose/:article', async (req, res) => {
-  let article = (await dbop.allArticleUrlid(sql_con, req.params.article))[0]
+admin.get('/secretadmin/compose/:article', async (req, res) => {
+  let article = (await dbop.allArticleUrlid(sql_con, req.params.article))[0][0]
+  //let pathToArticle = await dbop.getArticlePath(con, {urlid: req.params.article})
+  if (!article) {
+    await sendNotFound(res, config.pathTo404)
+    return
+  }
+  let pathToArticle = path.join(config.articleDirectory, article.pathToArticle, config.articleContentFileNameMd)
+  let articleContent = await fs.readFile(pathToArticle, 'utf8')
+  console.log(articleContent)
   let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
     title: article.titleArticle,
     abstract: article.abstractArticle,
-    article: article,
+    article: articleContent,
+    status: "",
+    action: req.path,
   })
   await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
 })
 
-app.get('/secretadmin/articles', async (req, res) => {
+admin.post('/secretadmin/compose/:article', tools.bodyCrlfToLf, async (req, res) => {
+  let urlid = req.path.match(/[^\/]*$/)[0]
+
+  if (req.body["publish"] !== undefined && req.body["delete"] === undefined){
+    let result =  await dbop.editExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
+    await renderInTemplate(res, result, "done", 0, "/img/flushed_round.gif")
+  }
+  else if (req.body["publish"] === undefined && req.body["delete"] !== undefined){
+    let result =  await dbop.deleteExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
+    await renderInTemplate(res, result, "done", 0, "/img/flushed_round.gif")
+  }
+})
+
+admin.get('/secretadmin/articles', async (req, res) => {
   let articles = (await dbop.allArticles(sql_con, "%", 1000))[0]
   let content = await ejs.renderFile('./views/pages/admin_articles.ejs', { articles: articles })
   await renderInTemplate(res, content, "All articles", 0, "/img/flushed_round.gif")
@@ -148,6 +181,8 @@ app.get('/guestbook', async (req, res) => {
 
 app.get('/about', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/about.ejs')
+  let mdContent = "# What the shit is pooping on!\nThe heck **is this shit**..."
+  await dbop.editExistingArticle(sqlLogin, config, "Proof-this-works", "doing your mom", [], null, "What the shit just happened here", mdContent, null, 1)
   // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
   await renderInTemplate(res, content, "O Čangasovi", 4)
 })
@@ -232,5 +267,13 @@ app.all('*', (req, res) => {
 })
 
 app.listen(5000, ()=> {
+  console.log('Beeing a dirty baka!')
+})
+
+admin.all('*', (req, res) => {
+  sendNotFound(res, config.pathTo404)
+})
+
+admin.listen(5001, ()=> {
   console.log('Beeing a dirty baka!')
 })

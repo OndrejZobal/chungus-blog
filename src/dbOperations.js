@@ -96,6 +96,17 @@ const createWIPArticle = async (con, title, abstract, publicationDate) => {
 }
 exports.createWIPArticle = createWIPArticle
 
+const updateArticle = async (con, urlid, title, abstract, isPublic) => {
+  try{
+    return await con.query(`UPDATE Article SET titleArticle=?, abstractArticle=?, isPublic=? WHERE urlidArticle=? `,
+                           [title, abstract, isPublic, urlid])
+  }
+  catch(err) {
+    console.log(err)
+    return false
+  }
+}
+
 const createArticleHasAuthor = async (con, articleId, authorId) => {
   try {
     console.log("What the fuck")
@@ -119,6 +130,17 @@ const createArticleHasTag = async (con, articleId, tagId) => {
   }
 }
 exports.createArticleHasTag = createArticleHasTag
+
+const getArticlePath = async (con, ids) => {
+  if (ids.urlid) {
+    return await con.query('SELECT pathToArticle FROM Article WHERE urlidArticle = ? ', ids.urlid)
+  }
+  if (ids.id) {
+    return await con.query('SELECT pathToArticle FROM Article WHERE idArticle = ? ', ids.ids)
+  }
+  return null;
+}
+exports.getArticlePath = getArticlePath
 
 const setArticleWip = async (con, id, state) => {
   if (isNaN(state)) {
@@ -266,5 +288,197 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     return false
   }
 }
-
 exports.publishNewArticle = publishNewArticle
+
+const editExistingArticle = async (sqlLogin, config, urlid, title, tagIds, publicationDate, abstract, mdContent, resources, isPublic) => {
+  try{
+    // 1. Article is created in the database. Work in progress is set to true,
+    // so the article is not visible
+
+    const errorHandle = async (err, db, dir) => {
+      console.log(err)
+
+      await db.rollback()
+      await db.end()
+      return false;
+    }
+
+    // Making a brand new db connection to do transactions on.
+
+    let db = null
+    try {
+      db = await makeSqlConnection(sqlLogin)
+    }
+    catch (err) {
+      console.log(err)
+      return
+    }
+
+    await db.beginTransaction()
+
+    console.log("doing the big niggaballs")
+    // Creating article entry in the database
+    let result = await updateArticle(db, urlid, title, abstract, isPublic)
+    console.log(result)
+
+    /*
+     * TODO The fucking tags lol
+    // Assigning Tags
+    try {
+      for (const tag of tagIds) {
+        await createArticleHasTag(db, articleId, tag)
+      }
+    }
+    catch (err) {
+      await errorHandle(err, db)
+    }
+    */
+
+    // Query for the article path lol
+    let pathToArticle = (await getArticlePath(db, { urlid: urlid }))[0][0].pathToArticle
+    pathToArticle = path.join(config.articleDirectory, pathToArticle)
+    console.log(pathToArticle)
+    if (!fs.existsSync(pathToArticle)){
+      await errorHandle(`Article's (${urlid}) directory (${pathToArticle}) was not found.`)
+    }
+
+    // Writing the md content into a file
+    let htmlPath = path.join(pathToArticle, config.articleContentFileNameHtml)
+    let mdPath = path.join(pathToArticle, config.articleContentFileNameMd)
+    await fs.promises.writeFile(mdPath, mdContent)
+    // III. TODO Make subdirectory for resources and move resources for the article there.
+
+    // 3. Pandoc will convert the md file into an html file, that will be saved in
+    // the articles directory along with other resources.
+
+    // I. Run pandoc targeting the md file and save the aoutput in the article direcoty
+    try {
+      console.log("What the shit")
+      await exec(`pandoc --standalone --template ${config.articleCreationTemplate} -o ${htmlPath} < ${mdPath} ;`)
+    }
+    catch (err) {
+      await errorHandle(err, db, pathToArticle)
+    }
+
+    // 4. If everything went ok the articles entry in the database will be altered
+    // to work in progress off. The article should then be publicly available
+    // on the website.
+
+    // Finalize changes to the db
+    await db.commit()
+    await db.end()
+    console.log(`ARTICLE ${result.path} ADDED SUCCESSFULL`)
+    return true
+  }
+  catch (err) {
+    console.log(err)
+    return false
+  }
+}
+exports.editExistingArticle = editExistingArticle
+
+const getIdArticleFromUrlid = async (con, urlid) => {
+  return (await con.query('SELECT idArticle FROM Article WHERE urlidArticle = ?', urlid))[0][0].idArticle
+}
+
+const removeArticleTags = async (con, id) => {
+  try {
+    return await con.query('DELETE FROM Article_has_Tag WHERE Article_idArticle = ?', id)
+  }
+  catch (err) {
+    console.log(err)
+    return false
+  }
+}
+
+const removeArticleAuthors = async (con, id) => {
+  try {
+    return await con.query('DELETE FROM Article_has_Author WHERE Article_idArticle = ?', id)
+  }
+  catch (err) {
+    console.log(err)
+    return false
+  }
+}
+
+const removeArticle = async (con, urlid) => {
+  // get id
+  let id = await getIdArticleFromUrlid(con, urlid)
+
+  // remove tags
+  let result = await removeArticleTags(con, id)
+  if (!result) {
+    console.log(`Cannot remove tags on article ${urlid}`)
+    return false
+  }
+
+  // remove authors
+  result = await removeArticleAuthors(con, id)
+  if (!result) {
+    console.log(`Cannot remove authors on article ${urlid}`)
+    return false
+  }
+
+  try {
+    return await con.query('DELETE FROM Article WHERE urlidArticle = ?', urlid)
+  }
+  catch (err) {
+    console.log(err)
+    return false
+  }
+}
+
+const deleteExistingArticle = async (sqlLogin, config, urlid) => {
+  const errorHandle = async (err, db) => {
+    console.log(err)
+    await db.rollback()
+    await db.query('UPDATE Article SET isWorkInProgress = FALSE WHERE urlidArticle = ?;', urlid)
+    await db.end()
+    return false
+  }
+
+  try {
+    let db = await makeSqlConnection(sqlLogin)
+    let pathToArticle = (await getArticlePath(db, {urlid: urlid}))[0][0].pathToArticle
+    pathToArticle = path.join(config.articleDirectory, pathToArticle)
+    console.log("What tyhe fauckgnakjdgf sagfiucssmacj")
+    console.log(pathToArticle)
+
+    // set WIP
+    await db.query('UPDATE Article SET isWorkInProgress = TRUE WHERE urlidArticle = ?;', urlid)
+
+    // begin transaciton
+    await db.beginTransaction()
+
+    // remove article entry from database
+    let result = await removeArticle(db, urlid)
+    if (!result) {
+      return await errorHandle("Problem with removing article from database", db)
+    }
+    console.log(result)
+
+    // remove files
+    try {
+      // I. Make directory for the article
+      if (fs.existsSync(pathToArticle)){
+        fs.rmSync(pathToArticle, { recursive:  true, force: true })
+      }
+      else {
+        return await errorHandle(`Article directory was not found (${pathToArticle})`, db)
+      }
+    }
+    catch (err) {
+      console.log(err)
+      return await errorHandle("Problem with removing article files", db)
+    }
+
+    // commit
+    await db.commit()
+    await db.end()
+    console.log(`Article (${urlid}) removed sucessfully...`)
+  }
+  catch (err) {
+    console.log(err)
+  }
+}
+exports.deleteExistingArticle = deleteExistingArticle
