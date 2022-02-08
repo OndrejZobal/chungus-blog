@@ -170,7 +170,17 @@ admin.get('/secretadmin/articles', async (req, res) => {
 })
 
 app.get('/articles', async (req, res) => {
-  let content = await ejs.renderFile('./views/pages/articles.ejs')
+  let search = "%"
+  if(req.query.search){
+    search = `%${req.query.search}%`
+  }
+
+  let articles = (await dbop.articles(sql_con, search, limit=10000))[0]
+  let content = await ejs.renderFile('./views/pages/articles.ejs', {
+    action: req.path,
+    articles: articles,
+    search: req.query.search,
+  })
   await renderInTemplate(res, content, "Články", 2)
 })
 
@@ -181,8 +191,8 @@ app.get('/guestbook', async (req, res) => {
 
 app.get('/about', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/about.ejs')
-  let mdContent = "# What the shit is pooping on!\nThe heck **is this shit**..."
-  await dbop.editExistingArticle(sqlLogin, config, "Proof-this-works", "doing your mom", [], null, "What the shit just happened here", mdContent, null, 1)
+  // let mdContent = "# What the shit is pooping on!\nThe heck **is this shit**..."
+  // await dbop.editExistingArticle(sqlLogin, config, "Proof-this-works", "doing your mom", [], null, "What the shit just happened here", mdContent, null, 1)
   // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
   await renderInTemplate(res, content, "O Čangasovi", 4)
 })
@@ -203,7 +213,6 @@ app.get('/atom', async (req, res) => {
 
   res.setHeader('content-type', 'application/atom+xml')
   let lastEdit = articles[0].editDateArticle === null ? articles[0].publicationDateArticle : articles[0].editDateArticle
-  console.log(lastEdit)
   latstEdit = `${lastEdit.getFullYear()}-${lastEdit.getMonth()+1}-${lastEdit.getDate()}`
   await res.render('./pages/atom.ejs', {
     webTitle: config.webTitle,
@@ -220,7 +229,15 @@ app.get('/:article', async (req, res) => {
     if(article.length > 0){
       let authors = (await dbop.articleAuthors(sql_con, article[0].idArticle))[0]
       // Get the actual article file :)
-      let content = await fs.readFile(`./articles/${article[0].pathToArticle}/article.html`)
+      let content = null
+      try {
+        content = await fs.readFile(`./articles/${article[0].pathToArticle}/article.html`)
+      }
+      catch (err) {
+        console.log(err)
+        res.status(500)
+        content = '<span style="color: red">Server cannot display this article</span>'
+      }
 
       let rendered = await ejs.renderFile('./views/pages/article.ejs', {
         article: article[0],

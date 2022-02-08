@@ -233,8 +233,11 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     // 2. If the db entry was created sucessfully a directory for the article will be
     // created. And the Markdown file will be moved inside. Along with other resources
 
-    console.log(config.articleDirectory)
-    console.log(result.path)
+    // Creating an article in the article root can cause all articles to be deleted.
+    if(!result.path){
+      errorHandle("Empty path of article", db)
+    }
+
     let pathToArticle = path.join(config.articleDirectory, result.path)
     let resPath = path.join(pathToArticle, config.articleResourceSubdir)
     try {
