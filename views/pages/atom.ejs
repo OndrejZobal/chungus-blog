@@ -3,7 +3,7 @@
 
   <title><%= webTitle %></title>
   <link href="<%= baseUrl %>"/>
-  <updated><%= lastUpdate %></updated>
+  <updated><%= lastUpdate %>T00:00:00.000</updated>
   <author>
     <name><%= ownerName %></name>
     <email><%= ownerEmail %></email>
@@ -19,7 +19,7 @@
     <%
     let date = (article.editDateArticle === null ? article.publicationDateArticle : article.editDateArticle)
     %>
-    <updated><%= `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}` %></updated>
+    <updated><%= `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}` %>T00:00:00.000</updated>
     <summary><%= article.abstractArticle %></summary>
   </entry>
   <% } %>
