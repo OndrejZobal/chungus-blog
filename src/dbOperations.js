@@ -109,9 +109,6 @@ const updateArticle = async (con, urlid, title, abstract, isPublic) => {
 
 const createArticleHasAuthor = async (con, articleId, authorId) => {
   try {
-    console.log("What the fuck")
-    console.log(articleId)
-    console.log(authorId)
     return await con.query(`INSERT INTO Article_has_Author (Article_idArticle, Author_idAuthor) VALUES (?, ? );`, [articleId, authorId])
   }
   catch (err) {
@@ -144,7 +141,6 @@ exports.getArticlePath = getArticlePath
 
 const setArticleWip = async (con, id, state) => {
   if (isNaN(state)) {
-    console.log("omega pepega")
     return false
   }
   try {
@@ -153,7 +149,6 @@ const setArticleWip = async (con, id, state) => {
     return true
   }
   catch {
-    console.log("Trulo nulo")
     return false
   }
 }
@@ -202,8 +197,9 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     try{
       articleId = result.response[0].insertId
     }
-    catch {
-      await errorHandle("The database refused to add this article, TIP: Check if ids are unique.", db)
+    catch (err){
+      console.log(err)
+      return await errorHandle("The database refused to add this article, TIP: Check if ids are unique.", db)
     }
 
     // Assigning Authors
@@ -212,12 +208,12 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
         console.log(articleId)
         console.log(author)
         if (!await createArticleHasAuthor(db, articleId, author)){
-          await errorHandle("Cannot add Authors to database", db)
+          return await errorHandle("Cannot add Authors to database", db)
         }
       }
     }
     catch (err) {
-      await errorHandle(err, db)
+      return await errorHandle(err, db)
     }
 
     // Assigning Tags
@@ -227,7 +223,7 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
       }
     }
     catch (err) {
-      await errorHandle(err, db)
+      return await errorHandle(err, db)
     }
 
     // 2. If the db entry was created sucessfully a directory for the article will be
@@ -235,15 +231,19 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
 
     // Creating an article in the article root can cause all articles to be deleted.
     if(!result.path){
-      errorHandle("Empty path of article", db)
+      return await errorHandle("Empty path of article", db)
     }
 
-    let pathToArticle = path.join(config.articleDirectory, result.path)
+    let pathToArticle = path.resolve(path.join(config.articleDirectory, result.path))
+    if (pathToArticle === path.resolve(config.articleDirectory)){
+      return await errorHandle(`Attempted to create article (${urlid}) with a path in article root`, db)
+    }
+
     let resPath = path.join(pathToArticle, config.articleResourceSubdir)
     try {
       // I. Make directory for the article
       if (fs.existsSync(pathToArticle)){
-        await errorHandle(`Article directory "${result.path}" already exists!`, db)
+        return await errorHandle(`Article directory "${result.path}" already exists!`, db)
       }
       fs.mkdirSync(pathToArticle)
       fs.mkdirSync(resPath)
@@ -254,7 +254,7 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
                         mdContent)
     }
     catch (err) {
-      await errorHandle(err, db, pathToArticle)
+      return await errorHandle(err, db, pathToArticle)
     }
     // III. TODO Make subdirectory for resources and move resources for the article there.
 
@@ -266,11 +266,10 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     let mdPath = path.join(pathToArticle, config.articleContentFileNameMd)
     console.log(htmlPath)
     try {
-      console.log("What the shit")
       await exec(`pandoc --standalone --template ${config.articleCreationTemplate} -o ${htmlPath} < ${mdPath} ;`)
     }
     catch (err) {
-      await errorHandle(err, db, pathToArticle)
+      return await errorHandle(err, db, pathToArticle)
     }
 
     // 4. If everything went ok the articles entry in the database will be altered
@@ -278,7 +277,7 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     // on the website.
 
     if (!await setArticleWip(db, articleId, 0)){
-      await errorHandle("Article WIP state could not be changed", db, pathToArticle)
+      return await errorHandle("Article WIP state could not be changed", db, pathToArticle)
     }
 
     // Finalize changes to the db
@@ -287,7 +286,8 @@ const publishNewArticle = async (sqlLogin, config, title, authorIds, tagIds, pub
     console.log(`ARTICLE ${result.path} ADDED SUCCESSFULL`)
     return true
   }
-  catch {
+  catch (err) {
+    console.log(err)
     return false
   }
 }
@@ -319,7 +319,6 @@ const editExistingArticle = async (sqlLogin, config, urlid, title, tagIds, publi
 
     await db.beginTransaction()
 
-    console.log("doing the big niggaballs")
     // Creating article entry in the database
     let result = await updateArticle(db, urlid, title, abstract, isPublic)
     console.log(result)
@@ -338,11 +337,13 @@ const editExistingArticle = async (sqlLogin, config, urlid, title, tagIds, publi
     */
 
     // Query for the article path lol
-    let pathToArticle = (await getArticlePath(db, { urlid: urlid }))[0][0].pathToArticle
+    let pathToArticle = path.resolve((await getArticlePath(db, { urlid: urlid }))[0][0].pathToArticle)
     pathToArticle = path.join(config.articleDirectory, pathToArticle)
-    console.log(pathToArticle)
+    if (pathToArticle === path.resolve(config.articleDirectory)){
+      return await errorHandle(`Attempted to edit article (${urlid}) with a path in article root`, db)
+    }
     if (!fs.existsSync(pathToArticle)){
-      await errorHandle(`Article's (${urlid}) directory (${pathToArticle}) was not found.`)
+      return await errorHandle(`Article's (${urlid}) directory (${pathToArticle}) was not found.`, db)
     }
 
     // Writing the md content into a file
@@ -360,7 +361,7 @@ const editExistingArticle = async (sqlLogin, config, urlid, title, tagIds, publi
       await exec(`pandoc --standalone --template ${config.articleCreationTemplate} -o ${htmlPath} < ${mdPath} ;`)
     }
     catch (err) {
-      await errorHandle(err, db, pathToArticle)
+      return await errorHandle(err, db, pathToArticle)
     }
 
     // 4. If everything went ok the articles entry in the database will be altered
@@ -443,7 +444,10 @@ const deleteExistingArticle = async (sqlLogin, config, urlid) => {
   try {
     let db = await makeSqlConnection(sqlLogin)
     let pathToArticle = (await getArticlePath(db, {urlid: urlid}))[0][0].pathToArticle
-    pathToArticle = path.join(config.articleDirectory, pathToArticle)
+    pathToArticle = path.resolve(path.join(config.articleDirectory, pathToArticle))
+    if (pathToArticle === path.resolve(config.articleDirectory)){
+      return await errorHandle(`Attempted to edit article (${urlid}) with a path in article root`, db)
+    }
     console.log("What tyhe fauckgnakjdgf sagfiucssmacj")
     console.log(pathToArticle)
 
