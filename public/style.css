@@ -131,6 +131,7 @@ p {
 
 a {
     text-decoration: none;
+    font-style: italic;
     color: #1b3b6f;
     cursor: url(img/cursor-click.gif), auto;
 }
@@ -257,12 +258,29 @@ main {
     align-self: flex-end;
     color: red;
 }
+.nav-link-atom  {
+   text-align: center;
+}
+
+.nav-link-atom > a{
+    font-style: normal;
+    letter-spacing: 0.25em;
+    text-decoration: none;
+    font-family: LibreFranklin;
+    font-size: 1.2rem;
+    color: #FF8624;
+}
+
+.nav-link-atom > a:hover{
+    color: #FF9634;
+}
 
 .nav-link {
     text-align: center;
 }
 
 .nav-link > a {
+    font-style: normal;
     letter-spacing: 0.25em;
     text-decoration: none;
     font-family: LibreFranklin;
@@ -283,6 +301,8 @@ main {
 }
 
 .nav-link-active > a {
+    font-style: normal;
+    font-weight: bold;
     letter-spacing: 0.25em;
     text-decoration: none;
     font-family: LibreFranklin;

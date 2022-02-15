@@ -1,32 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-
-    <title>Mrcrsoft A ntivirun</title>
-</head>
-<body>
-    <div class="article-header">
-	<h1><%= article.titleArticle %></h1>
-    <span style="font-family: LibreBaskerville-Italic; float: right; text-align: right">publikováno dne <%=
-        article.publicationDateArticle.getDate().toString() +". "+
-        (article.publicationDateArticle.getMonth()+1).toString() +". "+
-         article.publicationDateArticle.getFullYear().toString() %>
-    </span>
-    <% if (authors.length > 0) { %>
-	<p>Autoři: <% authors.forEach((author) => { %>
-        <i><%= author.nameAuthor %></i>
-        <b><%= author.surnameAuthor %></b>
-        <% }) %>
-    </p>
-    <% } %>
-	<p class="quote"><%= article.abstractArticle %></p>
-    </div>
-	<hr style="border-top: 2px solid #3c6c83; border-bottom: none;">
-    <br>
-	 <%- content %>
-</body>
-
-</html>
+<div class="article-header">
+<h1><%= article.titleArticle %></h1>
+<span style="font-family: LibreBaskerville-Italic; float: right; text-align: right">publikováno dne <%=
+    article.publicationDateArticle.getDate().toString() +". "+
+    (article.publicationDateArticle.getMonth()+1).toString() +". "+
+      article.publicationDateArticle.getFullYear().toString() %>
+</span>
+<% if (authors.length > 0) { %>
+<p>Autoři: <% authors.forEach((author) => { %>
+    <i><%= author.nameAuthor %></i>
+    <b><%= author.surnameAuthor %></b>
+    <% }) %>
+</p>
+<% } %>
+<p class="quote"><%= article.abstractArticle %></p>
+</div>
+<hr style="border-top: 2px solid #3c6c83; border-bottom: none;">
+<br>
+<%- content %>

@@ -6,6 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/style.css"/>
 
+    <% if (typeof og !== 'undefined') { %>
+    <meta property="og:title" content="<%= og.titel %>">
+    <meta property="og:type" content="<%= og.type %>">
+    <meta property="og:image" content="<%= og.image %>">
+    <meta property="og:url" content="<%= og.url %>">
+    <meta property="og:locale" content="<%= og.locale %>">
+    <meta property="og:description" content="<%= og.description %>">
+    <meta property="og:site_name" content="<%= og.site_name %>">
+    <% } %>
+
     <title><%= title %></title>
 </head>
 <body>
@@ -20,7 +30,7 @@
             <p class="<%= (highlight == 2 ? "nav-link-active" : "nav-link") %>"> <a href="/articles">Články</a></p>
             <!--   <p class="<%= (highlight == 3 ? "nav-link-active" : "nav-link") %>"> <a href="/guestbook">Návštěvní kniha</a></p> -->
             <p class="<%= (highlight == 4 ? "nav-link-active" : "nav-link") %>"> <a href="/about">O Čangasovi</a></p>
-            <p class="<%= (highlight == 5 ? "nav-link-active" : "nav-link") %>"> <a href="/atom">Atom Feed</a></p>
+            <p class="nav-link-atom" > <a href="/atom">Atom Feed</a></p>
             <p class="<%= (highlight == 6 ? "nav-link-active" : "nav-link") %>"> <a href="http://bigchungus.i2p/">i2p</a> <a href="http://chung.onion">tor</a></p>
         </nav>
         <main>
