@@ -262,7 +262,7 @@ app.get('/:article', async (req, res) => {
       let og = {
         title: article[0].titleArticle,
         type: "article",
-        image: config.baseUrl + config.mainLogo.substring(2), // TODO add images to articles. Also make the substringing more stable
+        image: config.baseUrl + config.mainLogo.substring(1), // TODO add images to articles. Also make the substringing more stable
         url: config.baseUrl + req.path.substring(1),
         locale: config.locale,
         description: article[0].abstractArticle,
@@ -300,7 +300,7 @@ app.get('/', async (req, res) => {
   let og = {
     title: config.webTitle,
     type: "website",
-    image: config.baseUrl + config.mainLogo.substring(2), // TODO Make the substringing more stable
+    image: config.baseUrl + config.mainLogo.substring(1), // TODO Make the substringing more stable
     url: config.baseUrl + req.path.substring(1),
     locale: config.locale,
     description: "",
