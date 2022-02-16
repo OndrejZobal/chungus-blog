@@ -11,5 +11,7 @@
   "baseUrl": "https://bigchungus.cz/",
   "ownerName": "Ondřej Zobal",
   "ownerEmail": "ondrej@ondrejzobal.xyz",
-  "locale": "cs_CZ"
+  "locale": "cs_CZ",
+  "webPort": 8085,
+  "managementPort": 5001
 }

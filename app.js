@@ -319,7 +319,7 @@ app.all('*', (req, res) => {
   sendNotFound(res, config.pathTo404)
 })
 
-app.listen(5000, ()=> {
+app.listen(config.webPort, ()=> {
   console.log('Beeing a dirty baka!')
 })
 
@@ -327,6 +327,6 @@ admin.all('*', (req, res) => {
   sendNotFound(res, config.pathTo404)
 })
 
-admin.listen(5001, ()=> {
+admin.listen(config.managementPort, ()=> {
   console.log('Beeing a dirty baka!')
 })
