@@ -337,8 +337,9 @@ const editExistingArticle = async (sqlLogin, config, urlid, title, tagIds, publi
     */
 
     // Query for the article path lol
-    let pathToArticle = path.resolve((await getArticlePath(db, { urlid: urlid }))[0][0].pathToArticle)
-    pathToArticle = path.join(config.articleDirectory, pathToArticle)
+    let pathToArticle = (await getArticlePath(db, { urlid: urlid }))[0][0].pathToArticle
+    console.log(`What the shit is pooping on: ${pathToArticle}"`)
+    pathToArticle = path.resolve(path.join(config.articleDirectory, pathToArticle))
     if (pathToArticle === path.resolve(config.articleDirectory)){
       return await errorHandle(`Attempted to edit article (${urlid}) with a path in article root`, db)
     }

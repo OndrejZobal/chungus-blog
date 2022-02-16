@@ -41,21 +41,35 @@ dbop.makeSqlConnection(sqlLogin).then((con) => {
   sql_con = con
 })
 
-const renderInTemplate = async (res, content, title='', highlight=0,
-                                logo='/img/bigchungus.png',
-                                template='./pages/template.ejs') => {
-  if (title === ''){
-    title = config.webTitle
+/**
+ * A function for putting the page content into a final template and sending it off
+ *to the client.
+ * @param res A response object where the page will be sent
+ * @param content String of HTML that will be put inside of the template
+ * @param options An object for setting aditional optional parameters:
+ *     - options.title: A string containing the page title.
+ *     - options.og: Object containing openGraph parameters.
+ *     - options.highlight: Index number of menubar item that should be highlighted as selected
+ * 0 means nothing will be selected.
+ *     - options.logo: Path to an image that will be displayed as the page logo.
+ *     - options.template: The path to the template file.
+ */
+const renderInTemplate = async (res, content, options) => {
+                                // logo='/img/bigchungus.png',
+                                // template='./pages/template.ejs') => {
+  if (!options.title){
+    options.title = config.webTitle
   }
   else {
-    title += ' | ' + config.webTitle
+    options.title += ' | ' + config.webTitle
   }
 
-  await res.render(template, {
-    title: title,
-    logo: logo,
+  await res.render(options.template || config.mainTemplate , {
+    title: options.title,
+    logo: options.logo || config.mainLogo,
     content: content,
-    highlight: highlight
+    highlight: options.highlight || 0,
+    og: options.og,
   })
 }
 
@@ -63,7 +77,7 @@ const sendNotFound = async (res, path) => {
   res.status(404)
 
   let content = await ejs.renderFile(config.pathTo404, { path: res.req.path })
-  await renderInTemplate(res, content, title='Whoopsieee...', 0, '/img/sadcat.png')
+  await renderInTemplate(res, content, { title:'Whoopsieee...', highlight: 0, logo: '/img/sadcat.png' })
 }
 
 app.use(express.static('./public'))
@@ -83,13 +97,13 @@ admin.set('view engine', 'ejs')
 // A funny little easter egg to troll shitty script kiddies
 app.get('/admin', async (req, res) => {
   let content = await fs.readFile('./views/pages/epic_hacker.html')
-  await renderInTemplate(res, content, "Caught in 4K", 0, "/img/creepy_trollface.gif")
+  await renderInTemplate(res, content, { title: "Caught in 4K", highlight: 0, logo: "/img/creepy_trollface.gif" })
 })
 
 // A funny little easter egg to troll shitty script kiddies
 admin.get('/secretadmin', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/admin.ejs')
-  await renderInTemplate(res, content, "Admin Panel", 0, "/img/flushed_round.gif")
+  await renderInTemplate(res, content, { title: "Admin Panel", highlight: 0, logo: "/img/flushed_round.gif" })
 })
 
 admin.get('/secretadmin/compose', async (req, res) => {
@@ -100,7 +114,7 @@ admin.get('/secretadmin/compose', async (req, res) => {
     status: "",
     action: req.path,
   })
-  await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
+  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: "/img/flushed_round.gif" })
 })
 
 admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
@@ -116,7 +130,7 @@ admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
   })
   if (result){
     let content = await ejs.renderFile('./views/pages/admin.ejs')
-    await renderInTemplate(res, result, "Publishing artilce", 0, "/img/flushed_round.gif")
+    await renderInTemplate(res, result, { title: "Publishing artilce", highlight: 0, logo: "/img/flushed_round.gif" })
   }
   else {
     let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
@@ -126,7 +140,7 @@ admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
       status: result,
       action: req.path,
     })
-    await renderInTemplate(res, content, "Error", 0, "/img/flushed_round.gif")
+    await renderInTemplate(res, content, { title: "Error", highlight: 0, logo: "/img/flushed_round.gif" })
   }
 })
 
@@ -147,7 +161,7 @@ admin.get('/secretadmin/compose/:article', async (req, res) => {
     status: "",
     action: req.path,
   })
-  await renderInTemplate(res, content, "Compose a new article", 0, "/img/flushed_round.gif")
+  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: "/img/flushed_round.gif" })
 })
 
 admin.post('/secretadmin/compose/:article', tools.bodyCrlfToLf, async (req, res) => {
@@ -155,18 +169,18 @@ admin.post('/secretadmin/compose/:article', tools.bodyCrlfToLf, async (req, res)
 
   if (req.body["publish"] !== undefined && req.body["delete"] === undefined){
     let result =  await dbop.editExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
-    await renderInTemplate(res, result, "done", 0, "/img/flushed_round.gif")
+    await renderInTemplate(res, result, { title: "done", highlight: 0, logo: "/img/flushed_round.gif" })
   }
   else if (req.body["publish"] === undefined && req.body["delete"] !== undefined){
     let result =  await dbop.deleteExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
-    await renderInTemplate(res, result, "done", 0, "/img/flushed_round.gif")
+    await renderInTemplate(res, result, { title:"done", highlight: 0, logo: "/img/flushed_round.gif" })
   }
 })
 
 admin.get('/secretadmin/articles', async (req, res) => {
   let articles = (await dbop.allArticles(sql_con, "%", 1000))[0]
   let content = await ejs.renderFile('./views/pages/admin_articles.ejs', { articles: articles })
-  await renderInTemplate(res, content, "All articles", 0, "/img/flushed_round.gif")
+  await renderInTemplate(res, content, { title:"All articles", highlight: 0, logo: "/img/flushed_round.gif" })
 })
 
 app.get('/articles', async (req, res) => {
@@ -181,12 +195,12 @@ app.get('/articles', async (req, res) => {
     articles: articles,
     search: req.query.search,
   })
-  await renderInTemplate(res, content, "Články", 2)
+  await renderInTemplate(res, content, { title: "Články", highlight: 2 })
 })
 
 app.get('/guestbook', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/guestbook.ejs')
-  await renderInTemplate(res, content, "Návštěvní kniha", 3)
+  await renderInTemplate(res, content, { title: "Návštěvní kniha", highlight: 3 })
 })
 
 app.get('/about', async (req, res) => {
@@ -194,7 +208,7 @@ app.get('/about', async (req, res) => {
   // let mdContent = "# What the shit is pooping on!\nThe heck **is this shit**..."
   // await dbop.editExistingArticle(sqlLogin, config, "Proof-this-works", "doing your mom", [], null, "What the shit just happened here", mdContent, null, 1)
   // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
-  await renderInTemplate(res, content, "O Čangasovi", 4)
+  await renderInTemplate(res, content, { title: "O Čangasovi", highlight: 4 })
 })
 
 app.get('/atom', async (req, res) => {
@@ -244,7 +258,18 @@ app.get('/:article', async (req, res) => {
         content: content,
         authors: authors
       })
-      await renderInTemplate(res, rendered, title=article[0].titleArticle, 2)
+
+      let og = {
+        title: article[0].titleArticle,
+        type: "article",
+        image: config.baseUrl + config.mainLogo.substring(2), // TODO add images to articles. Also make the substringing more stable
+        url: config.baseUrl + req.path.substring(1),
+        locale: config.locale,
+        description: article[0].abstractArticle,
+        site_name: config.webTitle,
+      }
+
+      await renderInTemplate(res, rendered, { title: title=article[0].titleArticle, highlight: 2, og })
       fprint(`Article "${article[0].titleArticle}" served.`)
       return true
     }
@@ -271,7 +296,18 @@ app.get('/', async (req, res) => {
   // Doing your mom
   let sex = await fs.readFile('./quote.txt')
   let content = await ejs.renderFile('./views/pages/home.ejs', {articles: result, sex: sex})
-  await renderInTemplate(res, content, "", 1 )
+
+  let og = {
+    title: config.webTitle,
+    type: "website",
+    image: config.baseUrl + config.mainLogo.substring(2), // TODO Make the substringing more stable
+    url: config.baseUrl + req.path.substring(1),
+    locale: config.locale,
+    description: "",
+    site_name: config.webTitle,
+  }
+
+  await renderInTemplate(res, content, { title:"", highlight: 1, og } )
 })
 
 // app.get('/', (req, res) => {
