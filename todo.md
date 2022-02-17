@@ -4,8 +4,9 @@
 - [ ] upgrade config.json to toml.
 
 ## Articles
-- [ ] Hide author from articles (or show username.)
+- [x] Hide author from articles (or show username.)
 - [ ] Add conver pictures for articles.
+- [ ] Start seting time for publication and edit date
 - [ ] Add fancy uploads for articles
 
 ## Darknet
