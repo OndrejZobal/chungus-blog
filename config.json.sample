@@ -12,6 +12,6 @@
   "ownerName": "Ondřej Zobal",
   "ownerEmail": "ondrej@ondrejzobal.xyz",
   "locale": "cs_CZ",
-  "webPort": 8085,
+  "webPort": 5000,
   "managementPort": 5001
 }

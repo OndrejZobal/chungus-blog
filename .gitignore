@@ -13,5 +13,6 @@ yarn-error.log*
 .eslintcache
 
 *.credentials
+config.json
 articles/
 quote.txt

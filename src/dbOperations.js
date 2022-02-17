@@ -449,8 +449,7 @@ const deleteExistingArticle = async (sqlLogin, config, urlid) => {
     if (pathToArticle === path.resolve(config.articleDirectory)){
       return await errorHandle(`Attempted to edit article (${urlid}) with a path in article root`, db)
     }
-    console.log("What tyhe fauckgnakjdgf sagfiucssmacj")
-    console.log(pathToArticle)
+    console.log(`Deleting ${pathToArticle}`)
 
     // set WIP
     await db.query('UPDATE Article SET isWorkInProgress = TRUE WHERE urlidArticle = ?;', urlid)

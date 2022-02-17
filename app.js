@@ -205,10 +205,18 @@ app.get('/guestbook', async (req, res) => {
 
 app.get('/about', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/about.ejs')
-  // let mdContent = "# What the shit is pooping on!\nThe heck **is this shit**..."
-  // await dbop.editExistingArticle(sqlLogin, config, "Proof-this-works", "doing your mom", [], null, "What the shit just happened here", mdContent, null, 1)
-  // await dbop.publishNewArticle(sqlLogin, config, "New Proof this works", [1], [1], "4024-1-30", "This is a short description of the article that is funny and eye catching", "# Hello world!\nHow is it **going**? xd", 0)
-  await renderInTemplate(res, content, { title: "O Čangasovi", highlight: 4 })
+
+  let og = {
+    title: "O Čangasovi",
+    type: "website",
+    image: config.baseUrl + config.mainLogo.substring(1), // TODO add images to articles. Also make the substringing more stable
+    url: config.baseUrl + req.path.substring(1),
+    locale: config.locale,
+    description: "",
+    site_name: config.webTitle,
+  }
+
+  await renderInTemplate(res, content, { title: "O Čangasovi", highlight: 4, og })
 })
 
 app.get('/atom', async (req, res) => {
@@ -224,6 +232,7 @@ app.get('/atom', async (req, res) => {
   catch {
     res.send('error')
   }
+
 
   res.setHeader('content-type', 'application/atom+xml')
   let lastEdit = articles[0].editDateArticle === null ? articles[0].publicationDateArticle : articles[0].editDateArticle
@@ -245,8 +254,7 @@ app.get('/:article', async (req, res) => {
       // Get the actual article file :)
       let content = null
       try {
-        content = await fs.readFile(`./articles/${article[0].pathToArticle}/article.html`)
-      }
+        content = await fs.readFile(path.join(config.articleDirectory, article[0].pathToArticle, config.articleContentFileNameHtml))}
       catch (err) {
         console.log(err)
         res.status(500)
@@ -303,7 +311,7 @@ app.get('/', async (req, res) => {
     image: config.baseUrl + config.mainLogo.substring(1), // TODO Make the substringing more stable
     url: config.baseUrl + req.path.substring(1),
     locale: config.locale,
-    description: "",
+    description: "Vstoupit smí každý. S odchodem už to ale tak jednoduché nebude...",
     site_name: config.webTitle,
   }
 
