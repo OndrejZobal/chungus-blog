@@ -77,7 +77,7 @@ const sendNotFound = async (res, path) => {
   res.status(404)
 
   let content = await ejs.renderFile(config.pathTo404, { path: res.req.path })
-  await renderInTemplate(res, content, { title:'Whoopsieee...', highlight: 0, logo: '/img/sadcat.png' })
+  await renderInTemplate(res, content, { title:'Whoopsieee...', highlight: 0, logo: config.errorLogo })
 }
 
 app.use(express.static('./public'))
@@ -103,7 +103,7 @@ app.get('/admin', async (req, res) => {
 // A funny little easter egg to troll shitty script kiddies
 admin.get('/secretadmin', async (req, res) => {
   let content = await ejs.renderFile('./views/pages/admin.ejs')
-  await renderInTemplate(res, content, { title: "Admin Panel", highlight: 0, logo: "/img/flushed_round.gif" })
+  await renderInTemplate(res, content, { title: "Admin Panel", highlight: 0, logo: config.adminLogo })
 })
 
 admin.get('/secretadmin/compose', async (req, res) => {
@@ -114,7 +114,7 @@ admin.get('/secretadmin/compose', async (req, res) => {
     status: "",
     action: req.path,
   })
-  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: "/img/flushed_round.gif" })
+  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: config.adminLogo })
 })
 
 admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
@@ -130,7 +130,7 @@ admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
   })
   if (result){
     let content = await ejs.renderFile('./views/pages/admin.ejs')
-    await renderInTemplate(res, result, { title: "Publishing artilce", highlight: 0, logo: "/img/flushed_round.gif" })
+    await renderInTemplate(res, result, { title: "Publishing artilce", highlight: 0, logo: config.adminLogo })
   }
   else {
     let content = await ejs.renderFile('./views/pages/compose_article.ejs', {
@@ -140,7 +140,7 @@ admin.post('/secretadmin/compose', tools.bodyCrlfToLf, async (req, res) => {
       status: result,
       action: req.path,
     })
-    await renderInTemplate(res, content, { title: "Error", highlight: 0, logo: "/img/flushed_round.gif" })
+    await renderInTemplate(res, content, { title: "Error", highlight: 0, logo: config.adminLogo })
   }
 })
 
@@ -161,7 +161,7 @@ admin.get('/secretadmin/compose/:article', async (req, res) => {
     status: "",
     action: req.path,
   })
-  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: "/img/flushed_round.gif" })
+  await renderInTemplate(res, content, { title: "Compose a new article", highlight: 0, logo: config.adminLogo })
 })
 
 admin.post('/secretadmin/compose/:article', tools.bodyCrlfToLf, async (req, res) => {
@@ -169,18 +169,18 @@ admin.post('/secretadmin/compose/:article', tools.bodyCrlfToLf, async (req, res)
 
   if (req.body["publish"] !== undefined && req.body["delete"] === undefined){
     let result =  await dbop.editExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
-    await renderInTemplate(res, result, { title: "done", highlight: 0, logo: "/img/flushed_round.gif" })
+    await renderInTemplate(res, result, { title: "done", highlight: 0, logo: config.adminLogo })
   }
   else if (req.body["publish"] === undefined && req.body["delete"] !== undefined){
     let result =  await dbop.deleteExistingArticle(sqlLogin, config, urlid, req.body.title, null, null, req.body.abstract, req.body.article, null, 1)
-    await renderInTemplate(res, result, { title:"done", highlight: 0, logo: "/img/flushed_round.gif" })
+    await renderInTemplate(res, result, { title:"done", highlight: 0, logo: config.adminLogo })
   }
 })
 
 admin.get('/secretadmin/articles', async (req, res) => {
   let articles = (await dbop.allArticles(sql_con, "%", 1000))[0]
   let content = await ejs.renderFile('./views/pages/admin_articles.ejs', { articles: articles })
-  await renderInTemplate(res, content, { title:"All articles", highlight: 0, logo: "/img/flushed_round.gif" })
+  await renderInTemplate(res, content, { title:"All articles", highlight: 0, logo: config.adminLogo })
 })
 
 app.get('/articles', async (req, res) => {
@@ -249,6 +249,7 @@ app.get('/atom', async (req, res) => {
 
 app.get('/:article', async (req, res) => {
   const serve = async (res, article) => {
+    let logo = null
     if(article.length > 0){
       let authors = (await dbop.articleAuthors(sql_con, article[0].idArticle))[0]
       // Get the actual article file :)
@@ -259,7 +260,9 @@ app.get('/:article', async (req, res) => {
         console.log(err)
         res.status(500)
         content = '<span style="color: red">Server cannot display this article</span>'
+        logo = config.errorLogo
       }
+
 
       let rendered = await ejs.renderFile('./views/pages/article.ejs', {
         article: article[0],
@@ -277,7 +280,7 @@ app.get('/:article', async (req, res) => {
         site_name: config.webTitle,
       }
 
-      await renderInTemplate(res, rendered, { title: title=article[0].titleArticle, highlight: 2, og })
+      await renderInTemplate(res, rendered, { title: title=article[0].titleArticle, highlight: 2, og, logo })
       fprint(`Article "${article[0].titleArticle}" served.`)
       return true
     }
@@ -300,7 +303,7 @@ app.get('/:article', async (req, res) => {
 })
 
 app.get('/', async (req, res) => {
-  let result = (await dbop.articles(sql_con))[0]
+  let result = (await dbop.articles(sql_con, "%", 5))[0]
   // Doing your mom
   let sex = await fs.readFile('./quote.txt')
   let content = await ejs.renderFile('./views/pages/home.ejs', {articles: result, sex: sex})

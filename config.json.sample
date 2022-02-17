@@ -6,6 +6,8 @@
   "articleCreationTemplate": "./views/article_creation_template.html",
   "mainTemplate": "pages/template.ejs",
   "mainLogo": "/img/bigchungus.png",
+  "errorLogo": "/img/sadcat.png",
+  "adminLogo": "/img/flushed_round.gif",
   "webTitle": "Velký Čangas",
   "pathTo404": "./views/pages/404.ejs",
   "baseUrl": "https://bigchungus.cz/",
