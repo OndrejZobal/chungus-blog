@@ -320,6 +320,38 @@ app.get('/:article', async (req, res) => {
   await sendNotFound(res, config.pathTo404)
 })
 
+// Le article cdn has arrived 🧢.
+app.get('/:article/*', async (req, res) => {
+  // Remove the article from the path
+  let localPath = req.path.replace(/^\/[^/]*/, "")
+
+  /*
+   * If i understand things correctly there is no way for the client to escape
+   * the article's res directory, because '..' gets resolved in the entire url
+   * beforehand.
+   */
+
+  // Get the full resource path of the article.
+  let article = (await dbop.articleUrlid(sql_con, req.params.article))[0]
+
+  // Handle the article not existing.
+  if (!article[0]) {
+    sendNotFound(res, config.pathTo404);
+    return;
+  }
+  // Building the whole path.
+  let resourcePath = path.resolve(path.join(config.articleDirectory, article[0].pathToArticle, config.articleResourceSubdir, localPath))
+
+  // Handle the file not existing
+  if(!fssync.existsSync(resourcePath)) {
+    sendNotFound(res, config.pathTo404);
+    return;
+  }
+
+  // And off you go!
+  res.sendFile(resourcePath)
+})
+
 app.get('/', async (req, res) => {
   let result = (await dbop.articles(sql_con, "%", 5))[0]
   // Doing your mom
